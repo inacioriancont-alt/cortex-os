@@ -1,0 +1,19 @@
+{
+  "name": "cortex-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma de produtividade integrada ao Obsidian — segundo cérebro digital",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @cortex/web",
+    "build:web": "npm run build -w @cortex/web",
+    "dev:mobile": "npm run start -w @cortex/mobile",
+    "typecheck": "npm run typecheck -w @cortex/shared --if-present && npm run typecheck -w @cortex/web --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Environment (nunca commitar chaves)
+.env
+.env.local
+.env.*.local
+apps/web/.env.local
+
+# Build
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# Expo / mobile (futuro)
+.expo/
+web-build/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+
+.vercel
