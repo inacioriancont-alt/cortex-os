@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  MOCK_AUTH_COOKIE,
+  createClient,
+  isSupabaseConfigured,
+} from '@/lib/supabase/client';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -21,7 +25,16 @@ export default function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSupabaseConfigured()) {
-      setMessage('Configure .env.local com as chaves do Supabase.');
+      if (email === 'demo@cortex.os' && password === 'demo123') {
+        setLoading(true);
+        document.cookie = `${MOCK_AUTH_COOKIE}=true; path=/; max-age=86400; SameSite=Lax`;
+        router.push('/');
+        router.refresh();
+        return;
+      }
+      setMessage(
+        'Configure .env.local com as chaves do Supabase ou use demo@cortex.os / demo123'
+      );
       return;
     }
     setLoading(true);
@@ -68,6 +81,20 @@ export default function LoginForm() {
           <p className="mb-4 text-center text-sm text-red-400">
             Falha na autenticação. Tente novamente.
           </p>
+        )}
+
+        {!isSupabaseConfigured() && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-4 rounded-xl border border-indigo-500/25 bg-indigo-500/10 p-4 text-sm text-indigo-100"
+          >
+            <p className="font-medium">Modo demonstração</p>
+            <p className="mt-1 text-indigo-200/80">
+              E-mail: <code className="text-xs">demo@cortex.os</code> · Palavra-passe:{' '}
+              <code className="text-xs">demo123</code>
+            </p>
+          </motion.div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">

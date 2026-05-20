@@ -94,6 +94,28 @@ export interface FlowEdge {
   toStepId: string;
 }
 
+export interface Goal {
+  id: string;
+  userId: string;
+  title: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  dueAt?: string;
+  createdAt: string;
+}
+
+export interface Project {
+  id: string;
+  userId: string;
+  companyId?: string;
+  name: string;
+  slug: string;
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface GamificationEvent {
   id: string;
   userId: string;

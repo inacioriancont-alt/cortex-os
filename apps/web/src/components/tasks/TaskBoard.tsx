@@ -33,13 +33,21 @@ export function TaskBoard() {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
+  const [dueAt, setDueAt] = useState('');
   const { tasks, loading, error, stats, createTask, updateTaskStatus, deleteTask } =
     useTasksRealtime(filter);
 
   const handleAdd = async () => {
     if (!title.trim()) return;
-    const { error: err } = await createTask({ title, priority });
-    if (!err) setTitle('');
+    const { error: err } = await createTask({
+      title,
+      priority,
+      dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
+    });
+    if (!err) {
+      setTitle('');
+      setDueAt('');
+    }
   };
 
   const toggleDone = async (task: Task) => {
@@ -77,6 +85,13 @@ export function TaskBoard() {
               </option>
             ))}
           </select>
+          <input
+            type="date"
+            value={dueAt}
+            onChange={(e) => setDueAt(e.target.value)}
+            className="rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-3 text-slate-200"
+            title="Prazo"
+          />
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={handleAdd}
@@ -142,6 +157,11 @@ export function TaskBoard() {
                   >
                     {task.title}
                   </p>
+                  {task.dueAt && (
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Prazo: {new Date(task.dueAt).toLocaleDateString('pt-PT')}
+                    </p>
+                  )}
                   {task.description && (
                     <p className="mt-0.5 truncate text-sm text-slate-500">
                       {task.description}

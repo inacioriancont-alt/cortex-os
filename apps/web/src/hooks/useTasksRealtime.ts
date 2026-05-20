@@ -4,20 +4,39 @@ import { dbTaskToTask, type DbTask } from '@cortex/shared';
 import type { Priority, Task, TaskStatus } from '@cortex/shared';
 import { useCallback, useEffect, useState } from 'react';
 
+import { isDemoMode } from '@/lib/demo-mode';
+import { mockStore, subscribeMockStore } from '@/lib/mock-store';
 import { tryCreateClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 
 export type TaskFilter = 'all' | 'pending' | 'done';
 
+function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
+  if (filter === 'pending') {
+    return tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled');
+  }
+  if (filter === 'done') return tasks.filter((t) => t.status === 'done');
+  return tasks;
+}
+
 export function useTasksRealtime(filter: TaskFilter = 'all') {
   const { user, refreshProfile } = useAuth();
   const supabase = tryCreateClient();
+  const demo = isDemoMode();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
-    if (!user || !supabase) return;
+    if (!user) return;
+
+    if (demo) {
+      setTasks(filterTasks(mockStore.getTasks(), filter));
+      setError(null);
+      return;
+    }
+
+    if (!supabase) return;
     setError(null);
     let query = supabase
       .from('tasks')
@@ -38,10 +57,22 @@ export function useTasksRealtime(filter: TaskFilter = 'all') {
       return;
     }
     setTasks((data as DbTask[]).map(dbTaskToTask));
-  }, [user, supabase, filter]);
+  }, [user, supabase, filter, demo]);
 
   useEffect(() => {
-    if (!user || !supabase) {
+    if (!user) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+
+    if (demo) {
+      fetchTasks();
+      setLoading(false);
+      return subscribeMockStore(() => fetchTasks());
+    }
+
+    if (!supabase) {
       setTasks([]);
       setLoading(false);
       return;
@@ -69,7 +100,7 @@ export function useTasksRealtime(filter: TaskFilter = 'all') {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, supabase, fetchTasks, refreshProfile]);
+  }, [user, supabase, fetchTasks, refreshProfile, demo]);
 
   const createTask = useCallback(
     async (input: {
@@ -78,7 +109,15 @@ export function useTasksRealtime(filter: TaskFilter = 'all') {
       priority?: Priority;
       dueAt?: string;
     }) => {
-      if (!user || !supabase) return { error: 'Não autenticado' };
+      if (!user) return { error: 'Não autenticado' };
+
+      if (demo) {
+        mockStore.createTask(input);
+        fetchTasks();
+        return { error: null };
+      }
+
+      if (!supabase) return { error: 'Supabase não configurado' };
       const { error: err } = await supabase.from('tasks').insert({
         user_id: user.id,
         title: input.title.trim(),
@@ -94,11 +133,17 @@ export function useTasksRealtime(filter: TaskFilter = 'all') {
       if (err) return { error: err.message };
       return { error: null };
     },
-    [user, supabase]
+    [user, supabase, demo, fetchTasks]
   );
 
   const updateTaskStatus = useCallback(
     async (id: string, status: TaskStatus) => {
+      if (demo) {
+        mockStore.updateTaskStatus(id, status);
+        fetchTasks();
+        return { error: null };
+      }
+
       if (!supabase) return { error: 'Supabase não configurado' };
       const patch: Record<string, unknown> = {
         status,
@@ -109,24 +154,31 @@ export function useTasksRealtime(filter: TaskFilter = 'all') {
         patch.progress = 100;
       }
       const { error: err } = await supabase.from('tasks').update(patch).eq('id', id);
+      if (!err) refreshProfile();
       return { error: err?.message ?? null };
     },
-    [supabase]
+    [supabase, demo, fetchTasks, refreshProfile]
   );
 
   const deleteTask = useCallback(
     async (id: string) => {
+      if (demo) {
+        mockStore.deleteTask(id);
+        fetchTasks();
+        return { error: null };
+      }
       if (!supabase) return { error: 'Supabase não configurado' };
       const { error: err } = await supabase.from('tasks').delete().eq('id', id);
       return { error: err?.message ?? null };
     },
-    [supabase]
+    [supabase, demo, fetchTasks]
   );
 
+  const all = demo ? filterTasks(mockStore.getTasks(), 'all') : tasks;
   const stats = {
-    total: tasks.length,
-    done: tasks.filter((t) => t.status === 'done').length,
-    pending: tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled').length,
+    total: all.length,
+    done: all.filter((t) => t.status === 'done').length,
+    pending: all.filter((t) => t.status !== 'done' && t.status !== 'cancelled').length,
   };
 
   return {

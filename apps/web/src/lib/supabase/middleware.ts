@@ -1,21 +1,39 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { getSupabaseEnv, hasMockAuthCookie, isSupabaseConfigured } from './config';
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isAuthPage =
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/signup');
+  const isCallback = request.nextUrl.pathname.startsWith('/auth/');
 
-  if (!url || !key) {
-    if (!request.nextUrl.pathname.startsWith('/login')) {
+  if (!isSupabaseConfigured()) {
+    const mockAuth = hasMockAuthCookie(request.headers.get('cookie'));
+
+    if (!mockAuth && !isAuthPage && !isCallback) {
       const redirect = request.nextUrl.clone();
       redirect.pathname = '/login';
       redirect.searchParams.set('setup', '1');
       return NextResponse.redirect(redirect);
     }
+
+    if (mockAuth && isAuthPage) {
+      const redirect = request.nextUrl.clone();
+      redirect.pathname = '/';
+      redirect.searchParams.delete('setup');
+      return NextResponse.redirect(redirect);
+    }
+
     return supabaseResponse;
   }
+
+  const env = getSupabaseEnv()!;
+  const url = env.url;
+  const key = env.anonKey;
 
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -35,11 +53,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const isAuthPage =
-    request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/signup');
-  const isCallback = request.nextUrl.pathname.startsWith('/auth/');
 
   if (!user && !isAuthPage && !isCallback) {
     const redirect = request.nextUrl.clone();

@@ -2,114 +2,94 @@
 
 import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, Flame, Zap } from 'lucide-react';
+import Link from 'next/link';
 
 import { GlassCard } from '@/components/ui/GlassCard';
+import type { Flow, FlowStep, Goal, Task } from '@cortex/shared';
 
-const TODAY_TASKS = [
-  { title: 'Revisar documentação cliente', priority: 'urgent', time: '09:30' },
-  { title: 'Assinatura contrato — Empresa X', priority: 'high', time: '11:00' },
-  { title: 'Sync Obsidian vault', priority: 'medium', time: '14:00' },
-];
-
-const PRIORITY_STYLE: Record<string, string> = {
-  urgent: 'bg-red-500/20 text-red-300',
-  high: 'bg-amber-500/20 text-amber-300',
-  medium: 'bg-indigo-500/20 text-indigo-300',
-};
-
-export function TasksTodayWidget() {
+export function ProductivityWidget({
+  weekBars,
+  doneCount,
+}: {
+  weekBars: number[];
+  doneCount: number;
+}) {
+  const max = Math.max(1, ...weekBars);
   return (
-    <GlassCard
-      title="Tarefas de hoje"
-      subtitle="3 pendentes · 1 urgente"
-      delay={0.05}
-      action={
-        <button className="text-xs text-indigo-300 hover:text-indigo-200">
-          Ver todas →
-        </button>
-      }
-    >
-      <ul className="space-y-2">
-        {TODAY_TASKS.map((t, i) => (
-          <motion.li
-            key={t.title}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 + i * 0.05 }}
-            className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2.5 ring-1 ring-white/5"
-          >
-            <span className="h-4 w-4 rounded border border-indigo-400/40" />
-            <motion.span
-              className="flex-1 text-sm text-slate-200"
-              whileHover={{ x: 2 }}
-            >
-              {t.title}
-            </motion.span>
-            <span className="text-xs text-slate-500">{t.time}</span>
-            <span
-              className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase ${PRIORITY_STYLE[t.priority]}`}
-            >
-              {t.priority}
-            </span>
-          </motion.li>
-        ))}
-      </ul>
-    </GlassCard>
-  );
-}
-
-export function ProductivityWidget() {
-  return (
-    <GlassCard title="Produtividade semanal" subtitle="+18% vs semana passada" delay={0.1}>
-      <motion.div
-        className="flex h-28 items-end justify-between gap-2"
-        initial="hidden"
-        animate="visible"
-      >
-        {[40, 65, 55, 80, 72, 90, 68].map((h, i) => (
+    <GlassCard title="Produtividade semanal" subtitle={`${doneCount} concluídas (7 dias)`} delay={0.1}>
+      <motion.div className="flex h-28 items-end justify-between gap-2">
+        {weekBars.map((h, i) => (
           <motion.div
             key={i}
             className="flex-1 rounded-t-lg bg-gradient-to-t from-indigo-600/40 to-indigo-400/80"
-            variants={{
-              hidden: { height: 0 },
-              visible: { height: `${h}%` },
-            }}
+            initial={{ height: 0 }}
+            animate={{ height: `${(h / max) * 100}%` }}
             transition={{ delay: 0.15 + i * 0.04, duration: 0.5 }}
           />
         ))}
       </motion.div>
-      <p className="mt-3 text-xs text-slate-400">12 tarefas concluídas · 4h foco</p>
     </GlassCard>
   );
 }
 
-export function FlowsWidget() {
-  const steps = ['Admissão', 'Documentação', 'Assinatura', 'Cadastro', 'Folha'];
+export function FlowsWidget({
+  flows,
+  steps,
+}: {
+  flows: Flow[];
+  steps: FlowStep[];
+}) {
+  const flow = flows[0];
+  const flowSteps = flow ? steps.filter((s) => s.flowId === flow.id) : [];
+
   return (
-    <GlassCard title="Fluxos em andamento" subtitle="RH · 2 processos" delay={0.15}>
-      <div className="flex flex-wrap items-center gap-1 text-xs">
-        {steps.map((s, i) => (
-          <span key={s} className="flex items-center gap-1">
-            <span
-              className={`rounded-lg px-2 py-1 ${i < 3 ? 'bg-indigo-500/25 text-indigo-200' : 'bg-slate-800 text-slate-400'}`}
-            >
-              {s}
+    <GlassCard
+      title="Fluxos em andamento"
+      subtitle={flows.length ? `${flows.length} fluxo(s)` : 'Nenhum fluxo'}
+      delay={0.15}
+      action={
+        <Link href="/fluxos" className="text-xs text-indigo-300 hover:text-indigo-200">
+          Gerir →
+        </Link>
+      }
+    >
+      {flowSteps.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1 text-xs">
+          {flowSteps.map((s, i) => (
+            <span key={s.id} className="flex items-center gap-1">
+              <span className="rounded-lg bg-indigo-500/25 px-2 py-1 text-indigo-200">
+                {s.label}
+              </span>
+              {i < flowSteps.length - 1 && (
+                <ArrowRight className="h-3 w-3 text-slate-600" />
+              )}
             </span>
-            {i < steps.length - 1 && (
-              <ArrowRight className="h-3 w-3 text-slate-600" />
-            )}
-          </span>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">
+          <Link href="/fluxos" className="text-indigo-300">
+            Criar um fluxo
+          </Link>
+        </p>
+      )}
     </GlassCard>
   );
 }
 
-export function QuickStats() {
+export function QuickStats({
+  pending,
+  streak,
+  goalsCount,
+}: {
+  pending: number;
+  streak: number;
+  goalsCount: number;
+}) {
   const stats = [
-    { label: 'Foco hoje', value: '2h 15m', icon: Zap, color: 'text-violet-300' },
-    { label: 'Streak', value: '5 dias', icon: Flame, color: 'text-amber-300' },
-    { label: 'Próximo', value: '11:00', icon: Calendar, color: 'text-sky-300' },
+    { label: 'Pendentes', value: String(pending), icon: Zap, color: 'text-violet-300' },
+    { label: 'Streak', value: `${streak} dias`, icon: Flame, color: 'text-amber-300' },
+    { label: 'Metas', value: String(goalsCount), icon: Calendar, color: 'text-sky-300' },
   ];
   return (
     <motion.div
@@ -127,4 +107,53 @@ export function QuickStats() {
       ))}
     </motion.div>
   );
+}
+
+export function GoalsWidget({ goals }: { goals: Goal[] }) {
+  return (
+    <GlassCard
+      title="Metas"
+      subtitle={`${goals.length} ativas`}
+      delay={0.12}
+      action={
+        <Link href="/metas" className="text-xs text-indigo-300 hover:text-indigo-200">
+          Ver →
+        </Link>
+      }
+    >
+      <ul className="space-y-2">
+        {goals.slice(0, 3).map((g) => {
+          const pct = Math.min(100, Math.round((g.currentValue / g.targetValue) * 100));
+          return (
+            <li key={g.id}>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span className="truncate text-slate-200">{g.title}</span>
+                <span>{pct}%</span>
+              </div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-violet-500"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </li>
+          );
+        })}
+        {goals.length === 0 && (
+          <p className="text-sm text-slate-500">Defina metas em Metas</p>
+        )}
+      </ul>
+    </GlassCard>
+  );
+}
+
+export function useWeekCompletionBars(tasks: Task[]): number[] {
+  const bars = [0, 0, 0, 0, 0, 0, 0];
+  const now = Date.now();
+  for (const t of tasks) {
+    if (t.status !== 'done' || !t.completedAt) continue;
+    const diff = Math.floor((now - new Date(t.completedAt).getTime()) / 86400000);
+    if (diff >= 0 && diff < 7) bars[6 - diff]++;
+  }
+  return bars;
 }

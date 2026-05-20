@@ -1,4 +1,14 @@
-import type { Priority, Task, TaskStatus } from './types';
+import type {
+  Company,
+  Flow,
+  FlowStep,
+  GamificationEvent,
+  Goal,
+  Note,
+  Priority,
+  Task,
+  TaskStatus,
+} from './types';
 
 /** Linha da tabela `tasks` no Supabase */
 export type DbTask = {
@@ -70,5 +80,145 @@ export function taskToDbInsert(
     progress: 0,
     spent_minutes: 0,
     sort_order: 0,
+  };
+}
+
+export type DbNote = {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string;
+  obsidian_path: string;
+  tags: string[];
+  company_id: string | null;
+  project_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function dbNoteToNote(row: DbNote): Note {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    body: row.body,
+    obsidianPath: row.obsidian_path,
+    tags: row.tags ?? [],
+    companyId: row.company_id ?? undefined,
+    projectId: row.project_id ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export type DbCompany = {
+  id: string;
+  user_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export function dbCompanyToCompany(row: DbCompany): Company {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description ?? undefined,
+    metadata: row.metadata ?? {},
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export type DbFlow = {
+  id: string;
+  user_id: string;
+  company_id: string | null;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function dbFlowToFlow(row: DbFlow): Flow {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    description: row.description ?? undefined,
+    companyId: row.company_id ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export type DbFlowStep = {
+  id: string;
+  flow_id: string;
+  label: string;
+  position_x: number;
+  position_y: number;
+  sort_order: number;
+  color: string | null;
+};
+
+export function dbFlowStepToFlowStep(row: DbFlowStep): FlowStep {
+  return {
+    id: row.id,
+    flowId: row.flow_id,
+    label: row.label,
+    positionX: row.position_x,
+    positionY: row.position_y,
+    sortOrder: row.sort_order,
+    color: row.color ?? undefined,
+  };
+}
+
+export type DbGoal = {
+  id: string;
+  user_id: string;
+  title: string;
+  target_value: number;
+  current_value: number;
+  unit: string;
+  due_at: string | null;
+  created_at: string;
+};
+
+export function dbGoalToGoal(row: DbGoal): Goal {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    targetValue: row.target_value,
+    currentValue: row.current_value,
+    unit: row.unit,
+    dueAt: row.due_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+export type DbGamificationEvent = {
+  id: string;
+  user_id: string;
+  type: string;
+  xp_earned: number;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+
+export function dbEventToEvent(row: DbGamificationEvent): GamificationEvent {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type as GamificationEvent['type'],
+    xpEarned: row.xp_earned,
+    payload: row.payload ?? {},
+    createdAt: row.created_at,
   };
 }

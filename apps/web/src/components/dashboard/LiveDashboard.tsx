@@ -3,14 +3,20 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
 
 import {
   FlowsWidget,
+  GoalsWidget,
   ProductivityWidget,
   QuickStats,
+  useWeekCompletionBars,
 } from '@/components/dashboard/widgets';
+import { useFlows } from '@/hooks/useFlows';
+import { useGoals } from '@/hooks/useGoals';
 import { useTasksRealtime } from '@/hooks/useTasksRealtime';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useAuth } from '@/providers/AuthProvider';
 import type { Task } from '@cortex/shared';
 
 function TasksTodayLive({ tasks }: { tasks: Task[] }) {
@@ -65,6 +71,12 @@ function TasksTodayLive({ tasks }: { tasks: Task[] }) {
 
 export function LiveDashboard() {
   const { tasks, stats, loading } = useTasksRealtime('all');
+  const { goals } = useGoals();
+  const { flows, steps } = useFlows();
+  const { profile } = useAuth();
+
+  const weekBars = useWeekCompletionBars(tasks);
+  const doneWeek = useMemo(() => weekBars.reduce((a, b) => a + b, 0), [weekBars]);
 
   return (
     <div className="p-8">
@@ -74,14 +86,14 @@ export function LiveDashboard() {
         className="mb-8 flex flex-wrap items-end justify-between gap-4"
       >
         <div>
-          <p className="text-sm text-indigo-300/80">Sincronizado em tempo real</p>
+          <p className="text-sm text-indigo-300/80">Todas as áreas ativas</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-50">
             O seu dia, organizado
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             {loading
               ? 'A carregar…'
-              : `${stats.pending} pendentes · ${stats.done} concluídas`}
+              : `${stats.pending} pendentes · ${stats.done} concluídas · ${goals.length} metas`}
           </p>
         </div>
         <Link href="/tarefas">
@@ -96,23 +108,47 @@ export function LiveDashboard() {
         </Link>
       </motion.header>
 
-      <QuickStats />
+      <QuickStats
+        pending={stats.pending}
+        streak={profile?.streak_days ?? 0}
+        goalsCount={goals.length}
+      />
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <TasksTodayLive tasks={tasks} />
-        <ProductivityWidget />
-        <FlowsWidget />
+        <ProductivityWidget weekBars={weekBars} doneCount={doneWeek} />
+        <FlowsWidget flows={flows} steps={steps} />
+        <GoalsWidget goals={goals} />
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-6 xl:col-span-2"
+          className="glass rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-6 xl:col-span-2"
         >
-          <h2 className="font-semibold text-emerald-100">Fase 2A ativa</h2>
+          <h2 className="font-semibold text-indigo-100">Secções disponíveis</h2>
           <p className="mt-2 text-sm text-slate-300">
-            Login Supabase, tarefas com Realtime e XP ao concluir. Abra o mesmo projeto no
-            telemóvel (app gestao-tarefas) com as mesmas credenciais para ver as tarefas
-            sincronizadas.
+            Tarefas, Notas, Calendário, Fluxos, Empresas, Metas, Relatórios e Configurações —
+            com dados reais no Supabase ou modo demo (demo@cortex.os / demo123).
           </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            {[
+              '/tarefas',
+              '/notas',
+              '/calendario',
+              '/fluxos',
+              '/empresas',
+              '/metas',
+              '/relatorios',
+              '/configuracoes',
+            ].map((href) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-lg bg-white/5 px-3 py-1.5 text-indigo-200 ring-1 ring-white/10 hover:bg-white/10"
+              >
+                {href}
+              </Link>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>

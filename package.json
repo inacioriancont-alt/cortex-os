@@ -11,7 +11,11 @@
     "dev:web": "npm run dev -w @cortex/web",
     "build:web": "npm run build -w @cortex/web",
     "dev:mobile": "npm run start -w @cortex/mobile",
-    "typecheck": "npm run typecheck -w @cortex/shared --if-present && npm run typecheck -w @cortex/web --if-present"
+    "typecheck": "npm run typecheck -w @cortex/shared --if-present && npm run typecheck -w @cortex/web --if-present",
+    "supabase:login": "npx supabase login",
+    "supabase:link": "npx supabase link",
+    "supabase:push": "npx supabase db push",
+    "supabase:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-supabase.ps1"
   },
   "engines": {
     "node": ">=20"

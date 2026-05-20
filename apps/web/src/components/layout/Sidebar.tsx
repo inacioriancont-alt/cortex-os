@@ -116,7 +116,7 @@ export function Sidebar() {
           <LogOut className="h-4 w-4" />
           Sair
         </button>
-        <p className="mt-2 text-center text-[10px] text-slate-600">Fase 2A · Supabase</p>
+        <p className="mt-2 text-center text-[10px] text-slate-600">Cortex OS · todas as áreas</p>
       </motion.div>
     </aside>
   );
