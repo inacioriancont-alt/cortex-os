@@ -81,7 +81,42 @@ vercel --prod
 
 ---
 
-## 5. Problemas comuns
+## 5. Erro `404: NOT_FOUND` (página branca da Vercel)
+
+Isto **não** é o login da app — a Vercel não está a servir o Next.js.
+
+### Corrigir no painel Vercel
+
+**Settings → General**
+
+| Campo | Valor correto |
+|--------|----------------|
+| **Root Directory** | `apps/web` |
+| **Include source files outside of the Root Directory** | Ativado (default) |
+
+**Settings → Build & Deployment**
+
+| Campo | Valor correto |
+|--------|----------------|
+| **Framework Preset** | Next.js |
+| **Build Command** | *(vazio — usa o `package.json`)* |
+| **Output Directory** | *(vazio — não preencher `.next`)* |
+| **Install Command** | *(vazio — usa `vercel.json`)* ou `cd ../.. && npm install` |
+
+Depois: **Deployments → Redeploy** (último commit).
+
+Abre o URL da linha **Production** com bolinha verde, não um preview antigo.
+
+### Variáveis obrigatórias
+
+Na Vercel → **Settings → Environment Variables**:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+---
+
+## 6. Problemas comuns
 
 | Problema | Solução |
 |----------|---------|
@@ -89,6 +124,7 @@ vercel --prod
 | `requested path is invalid` | `.env` na Vercel com URL `https://ref.supabase.co` (sem paths extra) |
 | Build falha no monorepo | Root Directory = `apps/web` |
 | Erro em `globals.css` / Tailwind | Push das últimas alterações: build usa `next build --webpack`, Tailwind em `dependencies`, um só `package-lock.json` na raiz |
+| `404: NOT_FOUND` (Vercel) | Root Directory = `apps/web`, Output Directory vazio, Redeploy |
 | Notas/empresas não gravam | `npm run supabase:push` (migration `20250101000002_full_rls.sql`) |
 
 ---
