@@ -88,6 +88,7 @@ vercel --prod
 | Login redireciona com erro | Adicionar URL Vercel em Supabase → Redirect URLs |
 | `requested path is invalid` | `.env` na Vercel com URL `https://ref.supabase.co` (sem paths extra) |
 | Build falha no monorepo | Root Directory = `apps/web` |
+| Erro em `globals.css` / Tailwind | Push das últimas alterações: build usa `next build --webpack`, Tailwind em `dependencies`, um só `package-lock.json` na raiz |
 | Notas/empresas não gravam | `npm run supabase:push` (migration `20250101000002_full_rls.sql`) |
 
 ---

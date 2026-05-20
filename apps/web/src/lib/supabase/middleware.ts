@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { getSupabaseEnv, hasMockAuthCookie, isSupabaseConfigured } from './config';
 
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse['cookies']['set']>[2];
+};
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -40,7 +46,7 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: CookieToSet[]) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
