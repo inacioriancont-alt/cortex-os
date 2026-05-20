@@ -92,16 +92,24 @@ Isto **não** é o login da app — a Vercel não está a servir o Next.js.
 | Campo | Valor correto |
 |--------|----------------|
 | **Root Directory** | `apps/web` |
-| **Include source files outside of the Root Directory** | Ativado (default) |
+| **Include source files outside of the Root Directory** | **Ligado** (obrigatório no monorepo) |
 
 **Settings → Build & Deployment**
 
 | Campo | Valor correto |
 |--------|----------------|
 | **Framework Preset** | Next.js |
-| **Build Command** | *(vazio — usa o `package.json`)* |
-| **Output Directory** | *(vazio — não preencher `.next`)* |
-| **Install Command** | *(vazio — usa `vercel.json`)* ou `cd ../.. && npm install` |
+| **Node.js Version** | 20.x |
+| **Build Command** | `npm run build` *(ou vazio se usar `vercel.json`)* |
+| **Output Directory** | **VAZIO** — apagar se tiver `.next` ou `public` |
+| **Install Command** | `cd ../.. && npm install` *(ou vazio se usar `vercel.json`)* |
+
+**Importante:** Se **Output Directory** tiver qualquer valor, a Vercel serve ficheiros estáticos e dá `404: NOT_FOUND` em todas as rotas.
+
+### Testar depois do deploy
+
+1. `https://SEU-PROJETO.vercel.app/api/health` → deve devolver `{"ok":true,"app":"cortex-os"}`
+2. `https://SEU-PROJETO.vercel.app/login` → página de login
 
 Depois: **Deployments → Redeploy** (último commit).
 

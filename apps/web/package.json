@@ -21,6 +21,9 @@
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",

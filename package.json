@@ -10,6 +10,7 @@
   "scripts": {
     "dev:web": "npm run dev -w @cortex/web",
     "build:web": "npm run build -w @cortex/web",
+    "vercel-build": "npm run build -w @cortex/web",
     "dev:mobile": "npm run start -w @cortex/mobile",
     "typecheck": "npm run typecheck -w @cortex/shared --if-present && npm run typecheck -w @cortex/web --if-present",
     "supabase:login": "npx supabase login",
